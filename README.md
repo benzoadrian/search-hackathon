@@ -1,4 +1,4 @@
-# Coordinate Explorer: Real-Time Geospatial Intelligence
+# Inttrest: Real-Time Geospatial Intelligence
 
 **Turn any map coordinate into actionable insights—live, fast, and relevant.**
 

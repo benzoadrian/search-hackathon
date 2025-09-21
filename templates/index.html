@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mystery Coordinate Explorer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100%; }
+        #info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            max-width: 300px;
+            font-family: Arial, sans-serif;
+        }
+        .result { margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="info">
+        <h3>📍 Coordinate Explorer</h3>
+        <div id="latency"></div>
+        <div id="results"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([48.8566, 2.3522], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        map.on('click', async (e) => {
+            const { lat, lng } = e.latlng;
+            L.popup()
+                .setLatLng([lat, lng])
+                .setContent("🔍 Searching...")
+                .openOn(map);
+
+            const response = await fetch("/explore", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ lat, lng })
+            });
+            const data = await response.json();
+
+            document.getElementById("latency").innerHTML =
+                `<b>Latency:</b> ${data.latency}s`;
+
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = `
+                <h4>Nearby Startups/Cafés:</h4>
+                ${data.local.slice(0, 3).map(r =>
+                    `<div class="result">
+                        <b>${r.title}</b><br>
+                        ${r.address}<br>
+                        <a href="${r.website}" target="_blank">Website</a>
+                    </div>`
+                ).join("")}
+
+                <h4>Tech Events:</h4>
+                ${data.news.slice(0, 3).map(n =>
+                    `<div class="result">
+                        <b>${n.title}</b><br>
+                        ${n.date}<br>
+                        <a href="${n.link}" target="_blank">Read more</a>
+                    </div>`
+                ).join("")}
+            `;
+        });
+    </script>
+</body>
+</html>
